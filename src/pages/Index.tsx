@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/components/ui/use-toast';
 import Icon from '@/components/ui/icon';
 
 interface Product {
@@ -64,9 +65,16 @@ function Index() {
   const [cart, setCart] = useState<Product[]>([]);
   const [warrantySearch, setWarrantySearch] = useState('');
   const [activeTab, setActiveTab] = useState('all');
+  const [cartOpen, setCartOpen] = useState(false);
+  const { toast } = useToast();
 
   const addToCart = (product: Product) => {
     setCart([...cart, product]);
+    toast({
+      title: "Товар добавлен в корзину!",
+      description: `${product.name} успешно добавлен`,
+      duration: 2000,
+    });
   };
 
   const filteredProducts = products.filter(product => {
@@ -102,10 +110,15 @@ function Index() {
               </nav>
             </div>
             <div className="flex items-center space-x-4">
-              <Button variant="outline" size="sm" className="relative">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="relative transition-all hover:scale-105"
+                onClick={() => setCartOpen(!cartOpen)}
+              >
                 <Icon name="ShoppingCart" size={16} />
                 {cart.length > 0 && (
-                  <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs">
+                  <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs animate-scale-in">
                     {cart.length}
                   </Badge>
                 )}
@@ -259,6 +272,67 @@ function Index() {
           </div>
         </div>
       </section>
+
+      {/* Cart Sidebar */}
+      {cartOpen && (
+        <div className="fixed inset-0 z-50 flex">
+          <div 
+            className="flex-1 bg-black/50 backdrop-blur-sm" 
+            onClick={() => setCartOpen(false)}
+          />
+          <div className="w-96 bg-white shadow-xl">
+            <div className="p-6 border-b">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Корзина</h3>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setCartOpen(false)}
+                >
+                  <Icon name="X" size={20} />
+                </Button>
+              </div>
+            </div>
+            <div className="p-6 flex-1 overflow-auto">
+              {cart.length === 0 ? (
+                <div className="text-center py-8">
+                  <Icon name="ShoppingCart" size={48} className="mx-auto text-gray-300 mb-4" />
+                  <p className="text-gray-500">Корзина пуста</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {cart.map((item, index) => (
+                    <div key={index} className="flex items-center space-x-3 p-3 border rounded-lg">
+                      <img 
+                        src={item.image} 
+                        alt={item.name} 
+                        className="w-12 h-12 object-cover rounded"
+                      />
+                      <div className="flex-1">
+                        <h4 className="font-medium text-sm">{item.name}</h4>
+                        <p className="text-sm text-primary font-semibold">
+                          {item.price.toLocaleString()} ₽
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="pt-4 border-t">
+                    <div className="flex justify-between items-center mb-4">
+                      <span className="font-semibold">Итого:</span>
+                      <span className="text-xl font-bold text-primary">
+                        {cart.reduce((sum, item) => sum + item.price, 0).toLocaleString()} ₽
+                      </span>
+                    </div>
+                    <Button className="w-full" size="lg">
+                      Оформить заказ
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-12">
